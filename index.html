@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Roller Floor 3D - Pinte Todo o Chão!</title>
+  <meta name="description" content="Jogo puzzle 3D gratuito e open source onde você rola a bola e pinta cada quadrado do chão em labirintos procedurais!" />
+  <meta name="theme-color" content="#0d0f17" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2300e5ff'/><circle cx='38' cy='38' r='12' fill='%23ffffff'/></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Canvas 3D Three.js -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD Superior Glassmorphism -->
+    <header class="hud-top">
+      <div class="hud-bar">
+        <div class="hud-badge" id="hud-level-badge">NÍVEL 1</div>
+        
+        <div class="hud-stats-group">
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Movs</span>
+            <span id="hud-moves-count">0</span>
+          </div>
+        </div>
+
+        <div class="hud-actions">
+          <button class="hud-icon-btn" id="btn-audio-toggle" title="Alternar Som" aria-label="Som">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </button>
+          <button class="hud-icon-btn" id="btn-restart" title="Reiniciar Fase" aria-label="Reiniciar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+          </button>
+          <button class="hud-icon-btn" id="btn-leaderboard" title="Ranking & Leaderboard" aria-label="Leaderboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+              <path d="M4 22h16"></path>
+              <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-2.34"></path>
+              <path d="M18 14.66V17c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1v-2.34"></path>
+              <path d="M6 2h12v7a6 6 0 0 1-12 0V2z"></path>
+            </svg>
+          </button>
+          <button class="hud-icon-btn" id="btn-info" title="Como Jogar" aria-label="Informações">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso de Pintura -->
+      <div class="hud-progress-container">
+        <div class="hud-progress-track">
+          <div class="hud-progress-fill" id="hud-progress-fill"></div>
+        </div>
+        <div class="hud-percent-text" id="hud-percent-text">0%</div>
+      </div>
+    </header>
+
+    <!-- Dica de Tutorial -->
+    <div class="tutorial-hint" id="tutorial-hint">
+      <span>👆 Deslize (Swipe) ou use as setas do teclado para rolar</span>
+    </div>
+
+    <!-- Modal de Vitória / Nível Concluído -->
+    <div class="modal-overlay" id="modal-victory">
+      <div class="modal-card">
+        <div class="victory-stars-container" id="victory-stars"></div>
+        <h2 class="victory-title" id="victory-level">Fase Completa!</h2>
+        <p class="victory-subtitle" id="victory-moves">4 movimentos</p>
+        <button class="btn-primary-action" id="btn-next-level">PRÓXIMA FASE ➔</button>
+      </div>
+    </div>
+
+    <!-- Modal de Leaderboard / Ranking -->
+    <div class="modal-overlay" id="modal-leaderboard">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🏆 Classificação</h2>
+          <button class="btn-close-modal" id="btn-close-leaderboard">✕</button>
+        </div>
+
+        <div class="profile-setup-box">
+          <div class="profile-input-group">
+            <input type="text" id="player-name-input" maxlength="15" placeholder="Seu apelido..." />
+          </div>
+          <div class="avatar-picker-row" id="avatar-picker"></div>
+        </div>
+
+        <div class="leaderboard-scroll" id="leaderboard-list"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Informações / Como Jogar -->
+    <div class="modal-overlay" id="modal-info">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🎮 Como Jogar</h2>
+          <button class="btn-close-modal" id="btn-close-info">✕</button>
+        </div>
+        <div class="info-content">
+          <p>🎯 <strong>Objetivo:</strong> Pinte 100% de todos os blocos brancos do labirinto com tinta brilhante.</p>
+          <p>⚡ <strong>Mecânica:</strong> Ao deslizar ou apertar uma direção (Cima, Baixo, Esquerda, Direita), a bola de metal rola até colidir com a parede mais próxima.</p>
+          <p>📱 <strong>No Celular:</strong> Deslize o dedo na tela em qualquer direção.</p>
+          <p>💻 <strong>No PC:</strong> Arraste com o mouse ou use as <strong>Setas / WASD</strong> do teclado.</p>
+        </div>
+        <button class="btn-primary-action" onclick="document.getElementById('modal-info').classList.remove('active')">ENTENDI!</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
